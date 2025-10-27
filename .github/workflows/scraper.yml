@@ -1,0 +1,37 @@
+name: Bitcoin Scraper (Every 10 Minutes)
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'  # Run every 10 minutes
+  workflow_dispatch:        # Allows manual triggering
+
+jobs:
+  scrape-bitcoin:
+    runs-on: ubuntu-latest
+    env:
+      TZ: America/New_York  # Set your local timezone if needed
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser
+          pip install selenium pandas webdriver-manager fake-useragent
+
+      - name: Run Selenium scraper
+        run: python bitcoin_scraper.py
+
+      - name: Commit and Push updated CSV
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add bitcoin_hourly_data.csv
+          git commit -m "Updated Bitcoin data (10-min intervals)"
+          git push
